@@ -283,7 +283,7 @@ const MONTHLY_GOAL = 198000; // <- change this each month
 const SHEET_ID   = '2PACX-1vTS9tPCnoEZ3e8XXyAVBXKVaRBbA83vgFzjA-431HJ9pUVP4k2EPhOkE2sBATf2Tx_RPwjHfnxSwYHT';
 const URL1       = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=0`;
 const URL2       = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=1284365607`;
-const URL3       = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSP2NVK3Rd3zW0IJ0D_DgDxssxFRfzbq02-3Gjhz51wVqpDksOOEyS_rhXREppqVSZlrcPHhLr1hyJB/pub?gid=925222925&single=true&output=csv';
+const URL3       = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSP2NVK3Rd3zW0IJ0D_DgDxssxFRfzbq02-3Gjhz51wVqpDksOOEyS_rhXREppqVSZlrcPHhLr1hyJB/pub?output=csv';
 const REFRESH_MS = 60 * 60 * 1000;
 
 let techs = [], units = [], leads = [], currentView = 'revenue', sortCol = 'Completed Revenue', sortAsc = false;
@@ -312,9 +312,28 @@ function isTotals(row) {
   return /^\d+$/.test(n) || n === '';
 }
 
+async function fetchCSV(url) {
+  // Try direct fetch first
+  try {
+    const r = await fetch(url);
+    if (r.ok) return r.text();
+  } catch(e) {}
+  // CORS proxy fallback — returns raw text
+  try {
+    const r2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+    if (r2.ok) return r2.text();
+  } catch(e) {}
+  return '';
+}
+
 async function fetchAll() {
-  const [r1, r2, r3] = await Promise.all([fetch(URL1).then(r=>r.text()), fetch(URL2).then(r=>r.text()), fetch(URL3).then(r=>r.text())]);
-  const raw3 = parseLeads(r3);
+  const safe = p => p.catch(() => '');
+  const [r1, r2, r3] = await Promise.all([
+    safe(fetchCSV(URL1)),
+    safe(fetchCSV(URL2)),
+    safe(fetchCSV(URL3)),
+  ]);
+  const raw3 = r3 ? parseLeads(r3) : [];
   return { raw1: parseCSV(r1).filter(r=>!isTotals(r)), raw2: parseCSV(r2).filter(r=>!isTotals(r)), raw3 };
 }
 
@@ -496,7 +515,7 @@ function renderBottom() {
 }
 
 /* RENDER */
-function render(r1,r2,r3){ techs=r1; units=r2; leads=r3; renderKPIs(); renderTable(); renderSidebar(); renderBottom(); document.getElementById('last-updated').textContent='Last updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
+function render(r1,r2){ techs=r1; units=r2; renderKPIs(); renderTable(); renderSidebar(); renderBottom(); document.getElementById('last-updated').textContent='Last updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
 
 /* SAMPLE FALLBACK */
 function getSampleTechs(){return [{Name:'Chase Hegwood','Total Paid Time':'167.30','Opportunity Conversion Rate':'81.13%','Leads Set':'4','Tech Recall %':'0.00%','Revenue per Paid Hour':'$294.32','Converted Job Average':'$1090.00','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$49239.01','Replacement Lead Conversion Rate':'14.29%','Opportunity':'53','Converted Jobs':'43','Technician Business Unit':'HVAC Residential:AL Service','First Call Arrival Time Variance':'1.12','First Call Arrival Time':'09:37'},{Name:'Justin Shaw','Total Paid Time':'180.03','Opportunity Conversion Rate':'52.38%','Leads Set':'10','Tech Recall %':'3.03%','Revenue per Paid Hour':'$203.44','Converted Job Average':'$984.26','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$36626.87','Replacement Lead Conversion Rate':'8.33%','Opportunity':'63','Converted Jobs':'33','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'1.21','First Call Arrival Time':'09:27'},{Name:'Colin Dixon','Total Paid Time':'181.35','Opportunity Conversion Rate':'46.03%','Leads Set':'8','Tech Recall %':'6.90%','Revenue per Paid Hour':'$167.97','Converted Job Average':'$905.31','Recalls Caused':'2','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$30461.32','Replacement Lead Conversion Rate':'9.09%','Opportunity':'63','Converted Jobs':'29','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.97','First Call Arrival Time':'10:01'},{Name:'Jacob Snyder','Total Paid Time':'182.18','Opportunity Conversion Rate':'48.44%','Leads Set':'3','Tech Recall %':'3.23%','Revenue per Paid Hour':'$164.79','Converted Job Average':'$796.14','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$30022.21','Replacement Lead Conversion Rate':'0.00%','Opportunity':'64','Converted Jobs':'31','Technician Business Unit':'Residential: GA Service Agreements','First Call Arrival Time Variance':'1.54','First Call Arrival Time':'09:07'},{Name:'Preston Channell','Total Paid Time':'178.47','Opportunity Conversion Rate':'43.86%','Leads Set':'2','Tech Recall %':'0.00%','Revenue per Paid Hour':'$157.35','Converted Job Average':'$911.56','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$28080.88','Replacement Lead Conversion Rate':'0.00%','Opportunity':'57','Converted Jobs':'25','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.43','First Call Arrival Time':'08:54'},{Name:'Caleb Bryant','Total Paid Time':'167.10','Opportunity Conversion Rate':'48.05%','Leads Set':'5','Tech Recall %':'2.70%','Revenue per Paid Hour':'$165.51','Converted Job Average':'$567.13','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$27657.21','Replacement Lead Conversion Rate':'0.00%','Opportunity':'77','Converted Jobs':'37','Technician Business Unit':'Residential: GA Service Agreements','First Call Arrival Time Variance':'0.52','First Call Arrival Time':'09:07'},{Name:'Charlie Walker','Total Paid Time':'155.83','Opportunity Conversion Rate':'59.62%','Leads Set':'4','Tech Recall %':'0.00%','Revenue per Paid Hour':'$138.95','Converted Job Average':'$592.33','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$21653.14','Replacement Lead Conversion Rate':'12.50%','Opportunity':'52','Converted Jobs':'31','Technician Business Unit':'Residential: AL Service Agreements','First Call Arrival Time Variance':'1.21','First Call Arrival Time':'09:50'},{Name:'Jamie Smith','Total Paid Time':'143.65','Opportunity Conversion Rate':'39.58%','Leads Set':'4','Tech Recall %':'0.00%','Revenue per Paid Hour':'$147.57','Converted Job Average':'$853.25','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$21197.77','Replacement Lead Conversion Rate':'0.00%','Opportunity':'48','Converted Jobs':'19','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.50','First Call Arrival Time':'09:42'},{Name:'Shawn Reeves','Total Paid Time':'138.50','Opportunity Conversion Rate':'35.42%','Leads Set':'5','Tech Recall %':'0.00%','Revenue per Paid Hour':'$99.69','Converted Job Average':'$546.31','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'2.00','Completed Revenue':'$13807.28','Replacement Lead Conversion Rate':'8.33%','Opportunity':'48','Converted Jobs':'17','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.73','First Call Arrival Time':'09:28'},{Name:'Seth Morris','Total Paid Time':'143.58','Opportunity Conversion Rate':'34.62%','Leads Set':'10','Tech Recall %':'5.56%','Revenue per Paid Hour':'$80.17','Converted Job Average':'$380.42','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'2.00','Completed Revenue':'$11511.04','Replacement Lead Conversion Rate':'36.36%','Opportunity':'52','Converted Jobs':'18','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.67','First Call Arrival Time':'09:36'},{Name:'Britt Story','Total Paid Time':'77.23','Opportunity Conversion Rate':'26.09%','Leads Set':'0','Tech Recall %':'0.00%','Revenue per Paid Hour':'$105.26','Converted Job Average':'$833.79','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$8129.78','Replacement Lead Conversion Rate':'0.00%','Opportunity':'23','Converted Jobs':'6','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.34','First Call Arrival Time':'08:57'},{Name:'Jacob Barfield','Total Paid Time':'70.33','Opportunity Conversion Rate':'50.00%','Leads Set':'3','Tech Recall %':'0.00%','Revenue per Paid Hour':'$85.40','Converted Job Average':'$351.86','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$6006.16','Replacement Lead Conversion Rate':'40.00%','Opportunity':'26','Converted Jobs':'13','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.56','First Call Arrival Time':'09:02'},{Name:'Ben Devlin','Total Paid Time':'171.35','Opportunity Conversion Rate':'0.00%','Leads Set':'0','Tech Recall %':'0.00%','Revenue per Paid Hour':'$0.00','Converted Job Average':'$0.00','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$0.00','Replacement Lead Conversion Rate':'0.00%','Opportunity':'0','Converted Jobs':'0','Technician Business Unit':'Residential: GA Service Agreements','First Call Arrival Time Variance':'1.42','First Call Arrival Time':'09:43'}];}
@@ -506,11 +525,14 @@ function getSampleUnits(){return [{Name:'HVAC Residential:AL Service','Current W
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentView=btn.dataset.view; sortCol='Completed Revenue'; sortAsc=false; renderTable(); });
 });
-setInterval(async()=>{ try{ const{raw1,raw2,raw3}=await fetchAll(); render(raw1,raw2,raw3); }catch(e){console.warn('Refresh failed',e);} },REFRESH_MS);
+setInterval(async()=>{ try{ const{raw1,raw2,raw3}=await fetchAll(); render(raw1,raw2,raw3||[]); }catch(e){console.warn('Refresh failed',e);} },REFRESH_MS);
 
 (async()=>{
-  try{ const{raw1,raw2,raw3}=await fetchAll(); render(raw1,raw2,raw3); }
-  catch(e){ console.error('INIT_ERR',e); render(getSampleTechs(),getSampleUnits(),[]); }
+  try{
+    const{raw1,raw2,raw3}=await fetchAll();
+    render(raw1,raw2,raw3||[]);
+  }
+  catch(e){ console.error('INIT_ERR',e); render(getSampleTechs(),getSampleUnits()); }
   finally{ document.getElementById('loading').classList.add('hidden'); document.getElementById('app').classList.add('visible'); }
 })();
 </script>
