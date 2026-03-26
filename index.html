@@ -293,7 +293,7 @@ const URL1       = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?out
 const URL2       = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=1284365607`;
 const REFRESH_MS = 60 * 60 * 1000;
 
-let techs = [], units = [], currentView = 'revenue', sortCol = null, sortAsc = false;
+let techs = [], units = [], currentView = 'revenue', sortCol = 'Completed Revenue', sortAsc = false;
 
 /* PARSE */
 function parseCSV(text) {
@@ -504,7 +504,7 @@ function getSampleUnits(){return [{Name:'HVAC Residential:AL Service','Current W
 
 /* INIT */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentView=btn.dataset.view; sortCol=null; renderTable(); });
+  btn.addEventListener('click',()=>{ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentView=btn.dataset.view; sortCol='Completed Revenue'; sortAsc=false; renderTable(); });
 });
 setInterval(async()=>{ try{ const{raw1,raw2}=await fetchAll(); render(raw1,raw2); }catch(e){console.warn('Refresh failed',e);} },REFRESH_MS);
 
