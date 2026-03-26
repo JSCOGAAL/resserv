@@ -81,7 +81,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:cla
 .tbl-scroll::-webkit-scrollbar{width:3px}
 .tbl-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
 table{width:100%;border-collapse:collapse}
-thead th{position:sticky;top:0;background:#182d4a;z-index:2;font-family:'Barlow Condensed',sans-serif;font-size:clamp(8px,.9vw,12px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:clamp(3px,.4vh,6px) clamp(5px,.7vw,10px);text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
+thead th{position:sticky;top:0;background:#182d4a;z-index:2;font-family:'Barlow Condensed',sans-serif;font-size:clamp(8px,.9vw,12px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:clamp(3px,.4vh,6px) clamp(5px,.7vw,10px);text-align:left;cursor:pointer;white-space:nowrap;user-select:none}thead th.num-col{text-align:right}
 thead th:hover{color:var(--white)}
 thead th.sorted{color:var(--orange)}
 .sort-arrow{margin-left:2px;opacity:.4}
@@ -372,7 +372,8 @@ function renderTable() {
   const cols = VIEWS[currentView].cols;
   document.getElementById('tbl-head').innerHTML = '<tr>'+cols.map(c=>{
     const s=sortCol===c.key; const arrow=s?(sortAsc?'&#9650;':'&#9660;'):'&#9662;';
-    return `<th class="${s?'sorted':''}" data-key="${c.key}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+    const numCls = ((c.cls||'').includes('num') || c.special==='opp_conv') ? ' num-col' : '';
+    return `<th class="${s?'sorted':''}${numCls}" data-key="${c.key}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
   }).join('')+'</tr>';
 
   let data=[...techs];
@@ -380,7 +381,7 @@ function renderTable() {
 
   document.getElementById('tbl-body').innerHTML = data.map(r=>{
     return '<tr>'+cols.map(c=>{
-      if(c.special==='tech'){ const u=(r['Technician Business Unit']||'').replace('HVAC Residential:','').replace('Residential:','').trim(); return `<td><div class="tech-cell"><div class="avatar">${inits(r['Name'])}</div><div><div class="tech-name">${r['Name']}</div><div class="tech-unit">${u}</div></div></div></td>`; }
+      if(c.special==='tech'){ const u=(r['Technician Business Unit']||'').replace('HVAC Residential:','').replace('Residential:','').trim(); return `<td style="width:clamp(160px,18vw,260px)" ><div class="tech-cell"><div class="avatar">${inits(r['Name'])}</div><div><div class="tech-name">${r['Name']}</div><div class="tech-unit">${u}</div></div></div></td>`; }
       if(c.special==='opp_conv'){ const v=pctN(r['Opportunity Conversion Rate']); return `<td><span class="${pillC(v,60,45)}">${fmtPct(v)}</span></td>`; }
       if(c.special==='repl_conv'){ const v=pctN(r['Replacement Lead Conversion Rate']); return `<td>${v>0?`<span class="${pillC(v,20,10)}">${fmtPct(v)}</span>`:'<span class="col-dim">—</span>'}</td>`; }
       if(c.special==='recall'){ const v=pctN(r['Tech Recall %']); return `<td><span class="${pillC(100-v,97,95)}">${fmtPct(v)}</span></td>`; }
