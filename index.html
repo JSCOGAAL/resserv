@@ -314,7 +314,8 @@ function isTotals(row) {
 
 async function fetchAll() {
   const [r1, r2, r3] = await Promise.all([fetch(URL1).then(r=>r.text()), fetch(URL2).then(r=>r.text()), fetch(URL3).then(r=>r.text())]);
-  return { raw1: parseCSV(r1).filter(r=>!isTotals(r)), raw2: parseCSV(r2).filter(r=>!isTotals(r)), raw3: parseLeads(r3) };
+  const raw3 = parseLeads(r3);
+  return { raw1: parseCSV(r1).filter(r=>!isTotals(r)), raw2: parseCSV(r2).filter(r=>!isTotals(r)), raw3 };
 }
 
 function parseLeads(text) {
@@ -442,7 +443,7 @@ function renderSidebar() {
     </div>`).join('');
 
   // Lead Estimate Sales chart from Sheet3
-  const byLeads=[...leads].filter(l=>l.sales>0).sort((a,b)=>b.sales-a.sales);
+  const byLeads=[...(leads||[])].filter(l=>l.sales>0).sort((a,b)=>b.sales-a.sales);
   const maxSales=byLeads[0]?.sales||1;
   document.getElementById('leads-chart').innerHTML=byLeads.length ? byLeads.map(l=>{
     const pct=(l.sales/maxSales)*100;
@@ -509,7 +510,7 @@ setInterval(async()=>{ try{ const{raw1,raw2,raw3}=await fetchAll(); render(raw1,
 
 (async()=>{
   try{ const{raw1,raw2}=await fetchAll(); render(raw1,raw2); }
-  catch(e){ console.error(e); render(getSampleTechs(),getSampleUnits()); }
+  catch(e){ console.error('INIT_ERR',e); render(getSampleTechs(),getSampleUnits(),[]); }
   finally{ document.getElementById('loading').classList.add('hidden'); document.getElementById('app').classList.add('visible'); }
 })();
 </script>
