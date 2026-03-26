@@ -126,7 +126,7 @@ tbody td{padding:clamp(6px,.75vh,11px) clamp(8px,1vw,14px);font-size:clamp(11px,
 .bc-fill{height:100%;background:var(--orange);border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.7vw,9px);font-weight:700;color:#fff;white-space:nowrap;min-width:1.8em;transition:width 1s cubic-bezier(.22,1,.36,1)}
 
 /* BOTTOM ROW */
-.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(4px,.6vw,8px)}
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:clamp(4px,.6vw,8px)}
 .bot-panel{background:var(--navy-card);border:1px solid var(--border);border-radius:6px;padding:clamp(5px,.7vh,10px) clamp(9px,1vw,13px);display:flex;flex-direction:column;overflow:hidden}
 .bot-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:clamp(3px,.4vh,6px);flex-shrink:0}
 .bot-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(9px,1vw,13px);letter-spacing:.08em;text-transform:uppercase}
@@ -250,13 +250,7 @@ footer{display:flex;align-items:center;justify-content:space-between;padding:cla
   </div>
 
   <div class="bottom-row">
-    <div class="bot-panel">
-      <div class="bot-header">
-        <div class="bot-title">Opportunity Conversion</div>
-        <div class="bot-badge">TARGET: 60%</div>
-      </div>
-      <div class="mini-list" id="conv-list"></div>
-    </div>
+
     <div class="bot-panel">
       <div class="bot-header">
         <div class="bot-title">Recall Rate</div>
@@ -369,7 +363,8 @@ const VIEWS = {
     { key:'Name',                  label:'Technician',    special:'tech' },
     { key:'Opportunity',           label:'Opportunities', cls:'num col-dim' },
     { key:'Completed Revenue',     label:'Completed Rev', cls:'num money', fmt:r=>fmt$(r['Completed Revenue']) },
-    { key:'Revenue per Paid Hour', label:'Rev / Paid Hr', cls:'num money', fmt:r=>fmt$(r['Revenue per Paid Hour']) },
+    { key:'Revenue per Paid Hour',       label:'Rev / Paid Hr', cls:'num money', fmt:r=>fmt$(r['Revenue per Paid Hour']) },
+    { key:'Opportunity Conversion Rate', label:'Opp Conv %',    special:'opp_conv' },
   ]},
 };
 
@@ -421,15 +416,8 @@ function renderSidebar() {
 
 /* BOTTOM */
 function renderBottom() {
-  // Conversion
-  const byConv=[...techs].filter(r=>cleanNum(r['Opportunity'])>0).sort((a,b)=>pctN(b['Opportunity Conversion Rate'])-pctN(a['Opportunity Conversion Rate']));
-  document.getElementById('conv-list').innerHTML=byConv.map(r=>{
-    const v=pctN(r['Opportunity Conversion Rate']); const col=barCol(v,60,45);
-    return `<div class="mini-row"><div class="mini-name">${first(r['Name'])} ${lastI(r['Name'])}</div><div class="mini-track"><div class="mini-fill" style="width:${Math.min(v,100)}%;background:${col}"></div></div><div class="mini-val" style="color:${col}">${fmtPct(v)}</div></div>`;
-  }).join('');
-
   // Recall (sorted asc — 0% first = best)
-  const byRecall=[...techs].sort((a,b)=>pctN(a['Tech Recall %'])-pctN(b['Tech Recall %']));
+  const byRecall=[...techs].filter(r=>pctN(r['Tech Recall %'])>0).sort((a,b)=>pctN(b['Tech Recall %'])-pctN(a['Tech Recall %']));
   const maxRec=Math.max(...byRecall.map(r=>pctN(r['Tech Recall %'])),10);
   document.getElementById('recall-list').innerHTML=byRecall.map(r=>{
     const v=pctN(r['Tech Recall %']); const col=v===0?'var(--green)':v<3?'var(--yellow)':'var(--red)'; const bp=maxRec>0?(v/maxRec)*100:0;
