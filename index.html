@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Jackson Services | Residential Service Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy:      #0F1F3D;
+  --navy-mid:  #162847;
+  --navy-card: #1A3055;
+  --navy-row:  #1E3460;
+  --orange:    #E8600A;
+  --green:     #22c55e;
+  --yellow:    #f59e0b;
+  --red:       #ef4444;
+  --white:     #f0f4ff;
+  --muted:     #7a9cc4;
+  --dim:       #4a6a8a;
+  --border:    rgba(255,255,255,0.06);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100vw;height:100vh;overflow:hidden;background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;font-size:clamp(9px,1.05vh,14px)}
+
+/* LOADING */
+#loading{position:fixed;inset:0;z-index:100;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;transition:opacity .5s ease}
+#loading.hidden{opacity:0;pointer-events:none}
+.load-logo{width:clamp(44px,7vw,80px);height:clamp(44px,7vw,80px);background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(16px,2.5vw,30px);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.load-label{font-family:'Barlow Condensed',sans-serif;font-size:clamp(12px,1.6vw,18px);letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.load-bar-wrap{width:clamp(160px,22vw,280px);height:3px;background:var(--navy-card);border-radius:2px;overflow:hidden}
+.load-bar{height:100%;width:0%;background:var(--orange);border-radius:2px;animation:loadprog 1.8s ease forwards}
+@keyframes loadprog{to{width:100%}}
+
+/* APP GRID */
+#app{display:grid;grid-template-rows:auto auto 1fr auto auto;height:100vh;padding:clamp(5px,.8vh,10px) clamp(7px,1vw,14px);gap:clamp(4px,.6vh,8px);opacity:0;transition:opacity .6s ease .2s}
+#app.visible{opacity:1}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:clamp(5px,.7vh,10px) clamp(8px,1vw,14px);background:var(--navy-mid);border-radius:6px;border:1px solid var(--border)}
+.hdr-left{display:flex;align-items:center;gap:clamp(7px,.9vw,12px)}
+.logo-mark{width:clamp(28px,3.6vw,48px);height:clamp(28px,3.6vw,48px);background:var(--orange);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(11px,1.4vw,18px);color:#fff}
+.co-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:clamp(13px,1.8vw,24px);letter-spacing:.04em;line-height:1}
+.co-sub{font-family:'Barlow Condensed',sans-serif;font-size:clamp(7px,.85vw,11px);color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.hdr-right{text-align:right}
+.mtd-badge{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(10px,1.3vw,16px);color:var(--orange);letter-spacing:.12em;text-transform:uppercase}
+.hdr-stats{font-size:clamp(7px,.8vw,10px);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-top:2px}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:clamp(4px,.6vw,8px)}
+.kpi-card{background:var(--navy-card);border:1px solid var(--border);border-top:3px solid var(--orange);border-radius:6px;padding:clamp(7px,.9vh,12px) clamp(9px,1vw,14px);display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.kpi-label{font-family:'Barlow Condensed',sans-serif;font-size:clamp(7px,.8vw,10px);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:clamp(3px,.4vh,6px)}
+.kpi-goal-note{font-size:clamp(6px,.7vw,9px);color:var(--dim);margin-left:.4em}
+.kpi-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(16px,2.8vw,42px);line-height:1}
+.kpi-val-row{display:flex;align-items:baseline;justify-content:space-between;gap:.4em;flex-wrap:wrap}
+.kpi-slash{color:var(--muted);font-weight:400;font-size:.55em}
+.kpi-goal-val{font-size:.5em;color:var(--muted);font-weight:400}
+.kpi-pct{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(11px,1.6vw,20px);color:var(--orange);white-space:nowrap}
+.goal-prog{margin-top:clamp(3px,.4vh,6px)}
+.goal-track{height:clamp(4px,.6vh,8px);background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden}
+.goal-fill{height:100%;background:var(--orange);border-radius:3px;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.goal-labels{display:flex;justify-content:space-between;margin-top:2px;font-size:clamp(6px,.65vw,8px);color:var(--dim)}
+.kpi-icon{position:absolute;top:clamp(7px,.9vh,12px);right:clamp(9px,1vw,14px);width:clamp(18px,2.2vw,28px);height:clamp(18px,2.2vw,28px);border:1.5px solid var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--orange);font-size:clamp(8px,.85vw,11px)}
+.kpi-sub{font-size:clamp(7px,.75vw,9px);color:var(--muted);margin-top:3px}
+
+/* BODY */
+.body-row{display:grid;grid-template-columns:1fr clamp(190px,19vw,285px);gap:clamp(4px,.6vw,8px);min-height:0}
+
+/* TABLE */
+.tbl-panel{background:var(--navy-card);border:1px solid var(--border);border-radius:6px;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.tbl-header{display:flex;align-items:center;justify-content:space-between;padding:clamp(5px,.7vh,10px) clamp(9px,1vw,14px);border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(10px,1.2vw,15px);letter-spacing:.1em;text-transform:uppercase}
+.tab-group{display:flex;gap:3px}
+.tab-btn{font-family:'Barlow Condensed',sans-serif;font-size:clamp(7px,.8vw,10px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:3px;cursor:pointer;border:none;background:rgba(255,255,255,0.07);color:var(--muted);transition:background .15s,color .15s}
+.tab-btn.active{background:var(--orange);color:#fff}
+.tab-btn:hover:not(.active){background:rgba(255,255,255,0.12);color:var(--white)}
+.tbl-scroll{overflow-y:auto;overflow-x:hidden;flex:1;min-height:0}
+.tbl-scroll::-webkit-scrollbar{width:3px}
+.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+table{width:100%;border-collapse:collapse}
+thead th{position:sticky;top:0;background:#182d4a;z-index:2;font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.75vw,9px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:clamp(3px,.4vh,6px) clamp(5px,.7vw,10px);text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
+thead th:hover{color:var(--white)}
+thead th.sorted{color:var(--orange)}
+.sort-arrow{margin-left:2px;opacity:.4}
+thead th.sorted .sort-arrow{opacity:1}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:hover{background:rgba(255,255,255,0.03)}
+tbody td{padding:clamp(4px,.55vh,8px) clamp(5px,.7vw,10px);font-size:clamp(8px,.9vw,12px);white-space:nowrap}
+.tech-cell{display:flex;align-items:center;gap:clamp(5px,.6vw,8px)}
+.avatar{width:clamp(20px,2.3vw,28px);height:clamp(20px,2.3vw,28px);border-radius:4px;background:var(--navy-row);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(7px,.8vw,10px);color:var(--orange);flex-shrink:0}
+.tech-name{font-weight:500;font-size:clamp(8px,.9vw,12px)}
+.tech-unit{font-size:clamp(6px,.65vw,8px);color:var(--dim)}
+.pill{font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.7vw,9px);font-weight:700;letter-spacing:.05em;padding:1px 5px;border-radius:3px}
+.pill-g{background:rgba(34,197,94,.18);color:var(--green)}
+.pill-y{background:rgba(245,158,11,.18);color:var(--yellow)}
+.pill-r{background:rgba(239,68,68,.18);color:var(--red)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.money{color:var(--white)}
+.col-dim{color:var(--muted)}
+.col-good{color:var(--green)}
+.col-warn{color:var(--yellow)}
+.col-bad{color:var(--red)}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:clamp(4px,.6vh,8px);min-height:0}
+.sb-card{background:var(--navy-card);border:1px solid var(--border);border-radius:6px;padding:clamp(7px,.9vh,12px) clamp(9px,1vw,12px);flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.sb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:clamp(5px,.7vh,9px);flex-shrink:0}
+.sb-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(9px,1vw,13px);letter-spacing:.08em;text-transform:uppercase}
+.badge{font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.65vw,8px);font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:rgba(232,96,10,.2);color:var(--orange)}
+.leader-list{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:space-around}
+.leader-row{display:flex;align-items:center;gap:clamp(5px,.6vw,8px);padding:clamp(2px,.3vh,4px) 0;border-bottom:1px solid var(--border)}
+.leader-row:last-child{border-bottom:none}
+.leader-rank{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(11px,1.4vw,17px);color:var(--dim);width:1.2em;text-align:center;flex-shrink:0}
+.leader-rank.top{color:var(--orange)}
+.leader-info{flex:1;min-width:0}
+.leader-name{font-size:clamp(8px,.9vw,11px);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leader-detail{font-size:clamp(6px,.65vw,8px);color:var(--dim)}
+.leader-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(9px,1.1vw,14px);color:var(--orange);white-space:nowrap}
+.bar-chart-list{flex:1;overflow:hidden;display:flex;flex-direction:column;justify-content:space-around}
+.bc-row{display:flex;align-items:center;gap:clamp(4px,.5vw,7px)}
+.bc-name{font-size:clamp(7px,.8vw,10px);color:var(--muted);width:clamp(38px,4.5vw,60px);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-track{flex:1;height:clamp(11px,1.4vh,18px);background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.bc-fill{height:100%;background:var(--orange);border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.7vw,9px);font-weight:700;color:#fff;white-space:nowrap;min-width:1.8em;transition:width 1s cubic-bezier(.22,1,.36,1)}
+
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:clamp(4px,.6vw,8px)}
+.bot-panel{background:var(--navy-card);border:1px solid var(--border);border-radius:6px;padding:clamp(5px,.7vh,10px) clamp(9px,1vw,13px);display:flex;flex-direction:column;overflow:hidden}
+.bot-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:clamp(3px,.4vh,6px);flex-shrink:0}
+.bot-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(9px,1vw,13px);letter-spacing:.08em;text-transform:uppercase}
+.bot-badge{font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.65vw,8px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 5px;border:1px solid rgba(255,255,255,0.13);border-radius:3px;color:var(--muted)}
+.mini-list{flex:1;display:flex;flex-direction:column;justify-content:space-around;overflow:hidden}
+.mini-row{display:flex;align-items:center;gap:clamp(4px,.5vw,7px)}
+.mini-name{font-size:clamp(7px,.8vw,10px);color:var(--muted);width:clamp(48px,5.5vw,75px);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-track{flex:1;height:clamp(4px,.55vh,7px);background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.mini-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.22,1,.36,1)}
+.mini-val{font-family:'Barlow Condensed',sans-serif;font-size:clamp(8px,.85vw,11px);font-weight:700;text-align:right;width:clamp(28px,3.5vw,46px);flex-shrink:0;white-space:nowrap}
+
+/* PACING PANEL */
+.pace-list{flex:1;display:flex;flex-direction:column;justify-content:space-around;overflow:hidden}
+.pace-row{display:flex;align-items:center;justify-content:space-between;padding:clamp(3px,.4vh,6px) 0;border-bottom:1px solid var(--border)}
+.pace-row:last-child{border-bottom:none}
+.pace-label{font-family:'Barlow Condensed',sans-serif;font-size:clamp(8px,.85vw,11px);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.pace-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(14px,1.9vw,26px);color:var(--white)}
+.pace-sub{font-size:clamp(6px,.65vw,8px);color:var(--dim);margin-top:1px}
+
+/* FOOTER */
+footer{display:flex;align-items:center;justify-content:space-between;padding:clamp(1px,.25vh,4px) clamp(5px,.7vw,8px);flex-shrink:0}
+.footer-txt{font-size:clamp(6px,.7vw,8px);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-logo">JS</div>
+  <div class="load-label">Loading Performance Data&hellip;</div>
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="hdr-left">
+      <div class="logo-mark">JS</div>
+      <div>
+        <div class="co-name">JACKSON SERVICES</div>
+        <div class="co-sub">Residential Service Performance Feed</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="mtd-badge">Month to Date</div>
+      <div class="hdr-stats" id="hdr-stats">&mdash; Technicians &nbsp;&middot;&nbsp; &mdash; Converted Jobs</div>
+    </div>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Revenue <span class="kpi-goal-note" id="kpi-goal-note"></span></div>
+      <div>
+        <div class="kpi-val-row">
+          <div class="kpi-val"><span id="kpi-rev">&#8212;</span><span class="kpi-slash"> / </span><span class="kpi-goal-val" id="kpi-goal-disp">&#8212;</span></div>
+          <div class="kpi-pct" id="kpi-pct">&#8212;</div>
+        </div>
+        <div class="goal-prog">
+          <div class="goal-track"><div class="goal-fill" id="goal-fill" style="width:0%"></div></div>
+          <div class="goal-labels"><span>$0</span><span id="goal-remaining"></span><span id="goal-label"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">$</div>
+      <div class="kpi-label">Avg Rev / Paid Hour</div>
+      <div class="kpi-val" id="kpi-rph">&#8212;</div>
+      <div class="kpi-sub">Team average</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">&#9635;</div>
+      <div class="kpi-label">Avg Converted Job</div>
+      <div class="kpi-val" id="kpi-cja">&#8212;</div>
+      <div class="kpi-sub">Team average</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">&#8599;</div>
+      <div class="kpi-label">Opp Conv. Rate</div>
+      <div class="kpi-val" id="kpi-conv">&#8212;</div>
+      <div class="kpi-sub">Team average</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon">&#8987;</div>
+      <div class="kpi-label">Total Paid Hours</div>
+      <div class="kpi-val" id="kpi-hrs">&#8212;</div>
+      <div class="kpi-sub">Across all techs</div>
+    </div>
+  </div>
+
+  <div class="body-row">
+    <div class="tbl-panel">
+      <div class="tbl-header">
+        <div class="panel-title">Technician Breakdown</div>
+        <div class="tab-group">
+          <button class="tab-btn active" data-view="revenue">Revenue</button>
+          <button class="tab-btn" data-view="conversion">Conversion</button>
+          <button class="tab-btn" data-view="quality">Quality</button>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table id="tech-table">
+          <thead id="tbl-head"></thead>
+          <tbody id="tbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="sb-card">
+        <div class="sb-header">
+          <div class="sb-title">Revenue Leaders</div>
+          <div class="badge">TOP EARNERS</div>
+        </div>
+        <div class="leader-list" id="leader-list"></div>
+      </div>
+      <div class="sb-card">
+        <div class="sb-header">
+          <div class="sb-title">Rev / Paid Hour</div>
+          <div class="badge">RANKED</div>
+        </div>
+        <div class="bar-chart-list" id="rph-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="bot-panel">
+      <div class="bot-header">
+        <div class="bot-title">Opportunity Conversion</div>
+        <div class="bot-badge">TARGET: 60%</div>
+      </div>
+      <div class="mini-list" id="conv-list"></div>
+    </div>
+    <div class="bot-panel">
+      <div class="bot-header">
+        <div class="bot-title">Recall Rate</div>
+        <div class="bot-badge">LOWER IS BETTER</div>
+      </div>
+      <div class="mini-list" id="recall-list"></div>
+    </div>
+    <div class="bot-panel">
+      <div class="bot-header">
+        <div class="bot-title">Revenue Pacing</div>
+        <div class="bot-badge">ALL UNITS COMBINED</div>
+      </div>
+      <div class="pace-list" id="pace-list"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-txt"><span class="live-dot"></span>Live Data &middot; Auto-refreshes every hour</span>
+    <span class="footer-txt" id="last-updated">Last updated: &mdash;</span>
+    <span class="footer-txt">Jackson Services &copy; 2025</span>
+  </footer>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG — update MONTHLY_GOAL each month
+══════════════════════════════════════════ */
+const MONTHLY_GOAL = 198000; // <- change this each month
+
+const SHEET_ID   = '2PACX-1vTS9tPCnoEZ3e8XXyAVBXKVaRBbA83vgFzjA-431HJ9pUVP4k2EPhOkE2sBATf2Tx_RPwjHfnxSwYHT';
+const URL1       = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=0`;
+const URL2       = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=1284365607`;
+const REFRESH_MS = 60 * 60 * 1000;
+
+let techs = [], units = [], currentView = 'revenue', sortCol = null, sortAsc = false;
+
+/* PARSE */
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    vals.push(cur.trim());
+    const obj = {}; headers.forEach((h,i) => obj[h] = vals[i] ?? '');
+    return obj;
+  });
+}
+
+function isTotals(row) {
+  const n = (row['Name'] || '').trim();
+  return /^\d+$/.test(n) || n === '';
+}
+
+async function fetchAll() {
+  const [r1, r2] = await Promise.all([fetch(URL1).then(r=>r.text()), fetch(URL2).then(r=>r.text())]);
+  return { raw1: parseCSV(r1).filter(r=>!isTotals(r)), raw2: parseCSV(r2).filter(r=>!isTotals(r)) };
+}
+
+/* HELPERS */
+function cleanNum(v) { return parseFloat(String(v||0).replace(/[$,%]/g,'')) || 0; }
+const fmt$   = v => '$' + cleanNum(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtK   = v => '$' + (cleanNum(v)/1000).toFixed(1) + 'K';
+const fmtN   = v => cleanNum(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:1});
+const fmtPct = v => cleanNum(v).toFixed(1) + '%';
+const pctN   = v => cleanNum(String(v).replace('%',''));
+const inits  = n => (n||'').split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+const first  = n => (n||'').trim().split(' ')[0];
+const lastI  = n => { const p=(n||'').trim().split(' '); return p.length>1 ? p[p.length-1][0]+'.' : ''; };
+const pillC  = (v,g,y) => v>=g?'pill pill-g':v>=y?'pill pill-y':'pill pill-r';
+const barCol = (v,g,y) => v>=g?'var(--green)':v>=y?'var(--yellow)':'var(--red)';
+
+/* KPIs */
+function renderKPIs() {
+  const totalRev = techs.reduce((s,r)=>s+cleanNum(r['Completed Revenue']),0);
+  const validRph = techs.filter(r=>cleanNum(r['Revenue per Paid Hour'])>0);
+  const avgRph   = validRph.length ? validRph.reduce((s,r)=>s+cleanNum(r['Revenue per Paid Hour']),0)/validRph.length : 0;
+  const validCja = techs.filter(r=>cleanNum(r['Converted Job Average'])>0);
+  const avgCja   = validCja.length ? validCja.reduce((s,r)=>s+cleanNum(r['Converted Job Average']),0)/validCja.length : 0;
+  const validOpp = techs.filter(r=>cleanNum(r['Opportunity'])>0);
+  const avgConv  = validOpp.length ? validOpp.reduce((s,r)=>s+pctN(r['Opportunity Conversion Rate']),0)/validOpp.length : 0;
+  const totalHrs = techs.reduce((s,r)=>s+cleanNum(r['Total Paid Time']),0);
+  const totalCvt = techs.reduce((s,r)=>s+cleanNum(r['Converted Jobs']),0);
+  const pct      = Math.min((totalRev/MONTHLY_GOAL)*100,100);
+  const remain   = Math.max(MONTHLY_GOAL-totalRev,0);
+
+  document.getElementById('kpi-goal-note').textContent  = 'MTD GOAL: '+fmt$(MONTHLY_GOAL);
+  document.getElementById('kpi-rev').textContent        = fmt$(totalRev);
+  document.getElementById('kpi-goal-disp').textContent  = fmt$(MONTHLY_GOAL);
+  document.getElementById('kpi-pct').textContent        = pct.toFixed(1)+'% to goal';
+  document.getElementById('goal-fill').style.width      = pct+'%';
+  document.getElementById('goal-remaining').textContent = fmt$(remain)+' remaining';
+  document.getElementById('goal-label').textContent     = fmt$(MONTHLY_GOAL);
+  document.getElementById('kpi-rph').textContent        = '$'+Math.round(avgRph);
+  document.getElementById('kpi-cja').textContent        = '$'+Math.round(avgCja);
+  document.getElementById('kpi-conv').textContent       = avgConv.toFixed(1)+'%';
+  document.getElementById('kpi-hrs').textContent        = fmtN(totalHrs);
+  document.getElementById('hdr-stats').textContent      = techs.length+' Technicians  \u00b7  '+Math.round(totalCvt)+' Converted Jobs';
+}
+
+/* TABLE */
+const VIEWS = {
+  revenue: { cols: [
+    { key:'Name',                        label:'Technician',   special:'tech' },
+    { key:'Total Paid Time',             label:'Paid Hrs',     cls:'num col-dim' },
+    { key:'Completed Revenue',           label:'Completed Rev',cls:'num money', fmt:r=>fmt$(r['Completed Revenue']) },
+    { key:'Revenue per Paid Hour',       label:'Rev/Paid Hr',  cls:'num money', fmt:r=>fmt$(r['Revenue per Paid Hour']) },
+    { key:'Converted Job Average',       label:'Conv Job Avg', cls:'num money', fmt:r=>cleanNum(r['Converted Job Average'])>0?fmt$(r['Converted Job Average']):'—' },
+    { key:'Opportunity Conversion Rate', label:'Opp Conv %',   special:'opp_conv' },
+    { key:'Leads Set',                   label:'Leads',        cls:'num col-dim' },
+    { key:'Converted Jobs',              label:'Conv Jobs',    cls:'num col-dim' },
+  ]},
+  conversion: { cols: [
+    { key:'Name',                             label:'Technician',     special:'tech' },
+    { key:'Opportunity',                      label:'Opps',           cls:'num col-dim' },
+    { key:'Converted Jobs',                   label:'Conv Jobs',      cls:'num col-dim' },
+    { key:'Opportunity Conversion Rate',      label:'Opp Conv %',     special:'opp_conv' },
+    { key:'Replacement Lead Conversion Rate', label:'Repl Lead Conv', special:'repl_conv' },
+    { key:'Leads Set',                        label:'Leads Set',      cls:'num col-dim' },
+    { key:'Converted Job Average',            label:'Conv Job Avg',   cls:'num money', fmt:r=>cleanNum(r['Converted Job Average'])>0?fmt$(r['Converted Job Average']):'—' },
+    { key:'Completed Revenue',                label:'Rev',            cls:'num money', fmt:r=>fmt$(r['Completed Revenue']) },
+  ]},
+  quality: { cols: [
+    { key:'Name',                              label:'Technician',   special:'tech' },
+    { key:'Total Paid Time',                   label:'Paid Hrs',     cls:'num col-dim' },
+    { key:'Tech Recall %',                    label:'Recall %',     special:'recall' },
+    { key:'Recalls Caused',                   label:'Recalls',      cls:'num', fmt:r=>{ const v=cleanNum(r['Recalls Caused']); return `<span class="${v>0?'col-bad':'col-good'}">${v}</span>`; }, html:true },
+    { key:'Warranty Jobs',                    label:'Warranty',     cls:'num', fmt:r=>{ const v=cleanNum(r['Warranty Jobs']); return `<span class="${v>0?'col-warn':''}">${v}</span>`; }, html:true },
+    { key:'First Call Arrival Time',          label:'1st Call',     cls:'num col-dim' },
+    { key:'First Call Arrival Time Variance', label:'Arrival Var',  special:'arrival' },
+    { key:'Customer Satisfaction',            label:'Cust Sat',     cls:'num col-dim', fmt:r=>{ const v=cleanNum(r['Customer Satisfaction']); return v>0?v.toFixed(2):'—'; } },
+  ]},
+};
+
+function renderTable() {
+  const cols = VIEWS[currentView].cols;
+  document.getElementById('tbl-head').innerHTML = '<tr>'+cols.map(c=>{
+    const s=sortCol===c.key; const arrow=s?(sortAsc?'&#9650;':'&#9660;'):'&#9662;';
+    return `<th class="${s?'sorted':''}" data-key="${c.key}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+  }).join('')+'</tr>';
+
+  let data=[...techs];
+  if(sortCol){ data.sort((a,b)=>{ let av=a[sortCol]??'',bv=b[sortCol]??''; const an=cleanNum(av),bn=cleanNum(bv); if(!isNaN(an)&&!isNaN(bn)) return sortAsc?an-bn:bn-an; return sortAsc?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av)); }); }
+
+  document.getElementById('tbl-body').innerHTML = data.map(r=>{
+    return '<tr>'+cols.map(c=>{
+      if(c.special==='tech'){ const u=(r['Technician Business Unit']||'').replace('HVAC Residential:','').replace('Residential:','').trim(); return `<td><div class="tech-cell"><div class="avatar">${inits(r['Name'])}</div><div><div class="tech-name">${r['Name']}</div><div class="tech-unit">${u}</div></div></div></td>`; }
+      if(c.special==='opp_conv'){ const v=pctN(r['Opportunity Conversion Rate']); return `<td><span class="${pillC(v,60,45)}">${fmtPct(v)}</span></td>`; }
+      if(c.special==='repl_conv'){ const v=pctN(r['Replacement Lead Conversion Rate']); return `<td>${v>0?`<span class="${pillC(v,20,10)}">${fmtPct(v)}</span>`:'<span class="col-dim">—</span>'}</td>`; }
+      if(c.special==='recall'){ const v=pctN(r['Tech Recall %']); return `<td><span class="${pillC(100-v,97,95)}">${fmtPct(v)}</span></td>`; }
+      if(c.special==='arrival'){ const v=cleanNum(r['First Call Arrival Time Variance']); const col=v<=0.5?'col-good':v<=1?'col-warn':'col-bad'; return `<td class="num ${col}">${v.toFixed(2)}</td>`; }
+      if(c.html) return `<td class="${c.cls||''}">${c.fmt(r)}</td>`;
+      const val=c.fmt?c.fmt(r):(r[c.key]??'—');
+      return `<td class="${c.cls||''}">${val}</td>`;
+    }).join('')+'</tr>';
+  }).join('');
+
+  document.getElementById('tbl-head').querySelectorAll('th').forEach(th=>{
+    th.addEventListener('click',()=>{ const k=th.dataset.key; if(sortCol===k)sortAsc=!sortAsc; else{sortCol=k;sortAsc=false;} renderTable(); });
+  });
+}
+
+/* SIDEBAR */
+function renderSidebar() {
+  const sorted=[...techs].sort((a,b)=>cleanNum(b['Completed Revenue'])-cleanNum(a['Completed Revenue']));
+  document.getElementById('leader-list').innerHTML=sorted.slice(0,5).map((r,i)=>`
+    <div class="leader-row">
+      <div class="leader-rank ${i<3?'top':''}">${i+1}</div>
+      <div class="leader-info"><div class="leader-name">${r['Name']}</div><div class="leader-detail">${fmtN(r['Converted Jobs'])} jobs &middot; ${fmtN(r['Total Paid Time'])} hrs</div></div>
+      <div class="leader-val">${fmt$(r['Completed Revenue'])}</div>
+    </div>`).join('');
+
+  const byRph=[...techs].filter(r=>cleanNum(r['Revenue per Paid Hour'])>0).sort((a,b)=>cleanNum(b['Revenue per Paid Hour'])-cleanNum(a['Revenue per Paid Hour']));
+  const maxR=cleanNum(byRph[0]?.['Revenue per Paid Hour']||1);
+  document.getElementById('rph-chart').innerHTML=byRph.map(r=>{
+    const v=cleanNum(r['Revenue per Paid Hour']); const pct=(v/maxR)*100;
+    return `<div class="bc-row"><div class="bc-name">${first(r['Name'])}</div><div class="bc-track"><div class="bc-fill" style="width:${pct}%">$${Math.round(v)}</div></div></div>`;
+  }).join('');
+}
+
+/* BOTTOM */
+function renderBottom() {
+  // Conversion
+  const byConv=[...techs].filter(r=>cleanNum(r['Opportunity'])>0).sort((a,b)=>pctN(b['Opportunity Conversion Rate'])-pctN(a['Opportunity Conversion Rate']));
+  document.getElementById('conv-list').innerHTML=byConv.map(r=>{
+    const v=pctN(r['Opportunity Conversion Rate']); const col=barCol(v,60,45);
+    return `<div class="mini-row"><div class="mini-name">${first(r['Name'])} ${lastI(r['Name'])}</div><div class="mini-track"><div class="mini-fill" style="width:${Math.min(v,100)}%;background:${col}"></div></div><div class="mini-val" style="color:${col}">${fmtPct(v)}</div></div>`;
+  }).join('');
+
+  // Recall (sorted asc — 0% first = best)
+  const byRecall=[...techs].sort((a,b)=>pctN(a['Tech Recall %'])-pctN(b['Tech Recall %']));
+  const maxRec=Math.max(...byRecall.map(r=>pctN(r['Tech Recall %'])),10);
+  document.getElementById('recall-list').innerHTML=byRecall.map(r=>{
+    const v=pctN(r['Tech Recall %']); const col=v===0?'var(--green)':v<3?'var(--yellow)':'var(--red)'; const bp=maxRec>0?(v/maxRec)*100:0;
+    return `<div class="mini-row"><div class="mini-name">${first(r['Name'])} ${lastI(r['Name'])}</div><div class="mini-track"><div class="mini-fill" style="width:${Math.max(bp,2)}%;background:${col}"></div></div><div class="mini-val" style="color:${col}">${v===0?'\u2713 0%':fmtPct(v)}</div></div>`;
+  }).join('');
+
+  // Business units from Sheet2 — pacing only
+  const totalWeekly  = units.reduce((s,r)=>s+cleanNum(r['Current Weekly Pace']),0);
+  const totalMonthly = units.reduce((s,r)=>s+cleanNum(r['Current Monthly Pace']),0);
+  const totalYearly  = units.reduce((s,r)=>s+cleanNum(r['Current Yearly Pace']),0);
+
+  // Color-code monthly pace vs goal
+  const monthPct  = MONTHLY_GOAL > 0 ? (totalMonthly / MONTHLY_GOAL) * 100 : 0;
+  const monthCol  = monthPct >= 100 ? 'var(--green)' : monthPct >= 80 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('pace-list').innerHTML = `
+    <div class="pace-row">
+      <div>
+        <div class="pace-label">&#x1F4C5; Weekly Pace</div>
+        <div class="pace-sub">Current run rate</div>
+      </div>
+      <div class="pace-val">${fmtK(totalWeekly)}</div>
+    </div>
+    <div class="pace-row">
+      <div>
+        <div class="pace-label">&#x1F3AF; Monthly Pace</div>
+        <div class="pace-sub">vs $${(MONTHLY_GOAL/1000).toFixed(0)}K goal &mdash; ${monthPct.toFixed(1)}%</div>
+      </div>
+      <div class="pace-val" style="color:${monthCol}">${fmtK(totalMonthly)}</div>
+    </div>
+    <div class="pace-row">
+      <div>
+        <div class="pace-label">&#x1F4C8; Yearly Pace</div>
+        <div class="pace-sub">Annualized run rate</div>
+      </div>
+      <div class="pace-val">${'$'+(totalYearly/1000000).toFixed(2)+'M'}</div>
+    </div>`;
+}
+
+/* RENDER */
+function render(r1,r2){ techs=r1; units=r2; renderKPIs(); renderTable(); renderSidebar(); renderBottom(); document.getElementById('last-updated').textContent='Last updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
+
+/* SAMPLE FALLBACK */
+function getSampleTechs(){return [{Name:'Chase Hegwood','Total Paid Time':'167.30','Opportunity Conversion Rate':'81.13%','Leads Set':'4','Tech Recall %':'0.00%','Revenue per Paid Hour':'$294.32','Converted Job Average':'$1090.00','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$49239.01','Replacement Lead Conversion Rate':'14.29%','Opportunity':'53','Converted Jobs':'43','Technician Business Unit':'HVAC Residential:AL Service','First Call Arrival Time Variance':'1.12','First Call Arrival Time':'09:37'},{Name:'Justin Shaw','Total Paid Time':'180.03','Opportunity Conversion Rate':'52.38%','Leads Set':'10','Tech Recall %':'3.03%','Revenue per Paid Hour':'$203.44','Converted Job Average':'$984.26','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$36626.87','Replacement Lead Conversion Rate':'8.33%','Opportunity':'63','Converted Jobs':'33','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'1.21','First Call Arrival Time':'09:27'},{Name:'Colin Dixon','Total Paid Time':'181.35','Opportunity Conversion Rate':'46.03%','Leads Set':'8','Tech Recall %':'6.90%','Revenue per Paid Hour':'$167.97','Converted Job Average':'$905.31','Recalls Caused':'2','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$30461.32','Replacement Lead Conversion Rate':'9.09%','Opportunity':'63','Converted Jobs':'29','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.97','First Call Arrival Time':'10:01'},{Name:'Jacob Snyder','Total Paid Time':'182.18','Opportunity Conversion Rate':'48.44%','Leads Set':'3','Tech Recall %':'3.23%','Revenue per Paid Hour':'$164.79','Converted Job Average':'$796.14','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$30022.21','Replacement Lead Conversion Rate':'0.00%','Opportunity':'64','Converted Jobs':'31','Technician Business Unit':'Residential: GA Service Agreements','First Call Arrival Time Variance':'1.54','First Call Arrival Time':'09:07'},{Name:'Preston Channell','Total Paid Time':'178.47','Opportunity Conversion Rate':'43.86%','Leads Set':'2','Tech Recall %':'0.00%','Revenue per Paid Hour':'$157.35','Converted Job Average':'$911.56','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$28080.88','Replacement Lead Conversion Rate':'0.00%','Opportunity':'57','Converted Jobs':'25','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.43','First Call Arrival Time':'08:54'},{Name:'Caleb Bryant','Total Paid Time':'167.10','Opportunity Conversion Rate':'48.05%','Leads Set':'5','Tech Recall %':'2.70%','Revenue per Paid Hour':'$165.51','Converted Job Average':'$567.13','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$27657.21','Replacement Lead Conversion Rate':'0.00%','Opportunity':'77','Converted Jobs':'37','Technician Business Unit':'Residential: GA Service Agreements','First Call Arrival Time Variance':'0.52','First Call Arrival Time':'09:07'},{Name:'Charlie Walker','Total Paid Time':'155.83','Opportunity Conversion Rate':'59.62%','Leads Set':'4','Tech Recall %':'0.00%','Revenue per Paid Hour':'$138.95','Converted Job Average':'$592.33','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$21653.14','Replacement Lead Conversion Rate':'12.50%','Opportunity':'52','Converted Jobs':'31','Technician Business Unit':'Residential: AL Service Agreements','First Call Arrival Time Variance':'1.21','First Call Arrival Time':'09:50'},{Name:'Jamie Smith','Total Paid Time':'143.65','Opportunity Conversion Rate':'39.58%','Leads Set':'4','Tech Recall %':'0.00%','Revenue per Paid Hour':'$147.57','Converted Job Average':'$853.25','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$21197.77','Replacement Lead Conversion Rate':'0.00%','Opportunity':'48','Converted Jobs':'19','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.50','First Call Arrival Time':'09:42'},{Name:'Shawn Reeves','Total Paid Time':'138.50','Opportunity Conversion Rate':'35.42%','Leads Set':'5','Tech Recall %':'0.00%','Revenue per Paid Hour':'$99.69','Converted Job Average':'$546.31','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'2.00','Completed Revenue':'$13807.28','Replacement Lead Conversion Rate':'8.33%','Opportunity':'48','Converted Jobs':'17','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.73','First Call Arrival Time':'09:28'},{Name:'Seth Morris','Total Paid Time':'143.58','Opportunity Conversion Rate':'34.62%','Leads Set':'10','Tech Recall %':'5.56%','Revenue per Paid Hour':'$80.17','Converted Job Average':'$380.42','Recalls Caused':'1','Warranty Jobs':'0','Customer Satisfaction':'2.00','Completed Revenue':'$11511.04','Replacement Lead Conversion Rate':'36.36%','Opportunity':'52','Converted Jobs':'18','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.67','First Call Arrival Time':'09:36'},{Name:'Britt Story','Total Paid Time':'77.23','Opportunity Conversion Rate':'26.09%','Leads Set':'0','Tech Recall %':'0.00%','Revenue per Paid Hour':'$105.26','Converted Job Average':'$833.79','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$8129.78','Replacement Lead Conversion Rate':'0.00%','Opportunity':'23','Converted Jobs':'6','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.34','First Call Arrival Time':'08:57'},{Name:'Jacob Barfield','Total Paid Time':'70.33','Opportunity Conversion Rate':'50.00%','Leads Set':'3','Tech Recall %':'0.00%','Revenue per Paid Hour':'$85.40','Converted Job Average':'$351.86','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$6006.16','Replacement Lead Conversion Rate':'40.00%','Opportunity':'26','Converted Jobs':'13','Technician Business Unit':'HVAC Residential:GA Service','First Call Arrival Time Variance':'0.56','First Call Arrival Time':'09:02'},{Name:'Ben Devlin','Total Paid Time':'171.35','Opportunity Conversion Rate':'0.00%','Leads Set':'0','Tech Recall %':'0.00%','Revenue per Paid Hour':'$0.00','Converted Job Average':'$0.00','Recalls Caused':'0','Warranty Jobs':'0','Customer Satisfaction':'0.00','Completed Revenue':'$0.00','Replacement Lead Conversion Rate':'0.00%','Opportunity':'0','Converted Jobs':'0','Technician Business Unit':'Residential: GA Service Agreements','First Call Arrival Time Variance':'1.42','First Call Arrival Time':'09:43'}];}
+function getSampleUnits(){return [{Name:'HVAC Residential:AL Service','Current Weekly Pace':'$13316.75','Current Monthly Pace':'$76781.46','Current Yearly Pace':'$635592.11'},{Name:'HVAC Residential:GA Service','Current Weekly Pace':'$29864.24','Current Monthly Pace':'$99996.16','Current Yearly Pace':'$1009063.37'},{Name:'Residential: AL Service Agreements','Current Weekly Pace':'$18302.03','Current Monthly Pace':'$40631.24','Current Yearly Pace':'$523284.01'},{Name:'Residential: GA Service Agreements','Current Weekly Pace':'$36791.13','Current Monthly Pace':'$116283.30','Current Yearly Pace':'$699539.98'}];}
+
+/* INIT */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentView=btn.dataset.view; sortCol=null; renderTable(); });
+});
+setInterval(async()=>{ try{ const{raw1,raw2}=await fetchAll(); render(raw1,raw2); }catch(e){console.warn('Refresh failed',e);} },REFRESH_MS);
+
+(async()=>{
+  try{ const{raw1,raw2}=await fetchAll(); render(raw1,raw2); }
+  catch(e){ console.error(e); render(getSampleTechs(),getSampleUnits()); }
+  finally{ document.getElementById('loading').classList.add('hidden'); document.getElementById('app').classList.add('visible'); }
+})();
+</script>
+</body>
+</html>
