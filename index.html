@@ -81,17 +81,17 @@ header{display:flex;align-items:center;justify-content:space-between;padding:cla
 .tbl-scroll::-webkit-scrollbar{width:3px}
 .tbl-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
 table{width:100%;border-collapse:collapse}
-thead th{position:sticky;top:0;background:#182d4a;z-index:2;font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.75vw,9px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:clamp(3px,.4vh,6px) clamp(5px,.7vw,10px);text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
+thead th{position:sticky;top:0;background:#182d4a;z-index:2;font-family:'Barlow Condensed',sans-serif;font-size:clamp(8px,.9vw,12px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:clamp(3px,.4vh,6px) clamp(5px,.7vw,10px);text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
 thead th:hover{color:var(--white)}
 thead th.sorted{color:var(--orange)}
 .sort-arrow{margin-left:2px;opacity:.4}
 thead th.sorted .sort-arrow{opacity:1}
 tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
 tbody tr:hover{background:rgba(255,255,255,0.03)}
-tbody td{padding:clamp(4px,.55vh,8px) clamp(5px,.7vw,10px);font-size:clamp(8px,.9vw,12px);white-space:nowrap}
+tbody td{padding:clamp(6px,.75vh,11px) clamp(8px,1vw,14px);font-size:clamp(11px,1.2vw,16px);white-space:nowrap}
 .tech-cell{display:flex;align-items:center;gap:clamp(5px,.6vw,8px)}
-.avatar{width:clamp(20px,2.3vw,28px);height:clamp(20px,2.3vw,28px);border-radius:4px;background:var(--navy-row);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(7px,.8vw,10px);color:var(--orange);flex-shrink:0}
-.tech-name{font-weight:500;font-size:clamp(8px,.9vw,12px)}
+.avatar{width:clamp(20px,2.3vw,28px);height:clamp(20px,2.3vw,28px);border-radius:4px;background:var(--navy-row);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(9px,1vw,13px);color:var(--orange);flex-shrink:0}
+.tech-name{font-weight:500;font-size:clamp(11px,1.2vw,16px)}
 .tech-unit{font-size:clamp(6px,.65vw,8px);color:var(--dim)}
 .pill{font-family:'Barlow Condensed',sans-serif;font-size:clamp(6px,.7vw,9px);font-weight:700;letter-spacing:.05em;padding:1px 5px;border-radius:3px}
 .pill-g{background:rgba(34,197,94,.18);color:var(--green)}
@@ -222,8 +222,6 @@ footer{display:flex;align-items:center;justify-content:space-between;padding:cla
         <div class="panel-title">Technician Breakdown</div>
         <div class="tab-group">
           <button class="tab-btn active" data-view="revenue">Revenue</button>
-          <button class="tab-btn" data-view="conversion">Conversion</button>
-          <button class="tab-btn" data-view="quality">Quality</button>
         </div>
       </div>
       <div class="tbl-scroll">
@@ -368,34 +366,10 @@ function renderKPIs() {
 /* TABLE */
 const VIEWS = {
   revenue: { cols: [
-    { key:'Name',                        label:'Technician',   special:'tech' },
-    { key:'Total Paid Time',             label:'Paid Hrs',     cls:'num col-dim' },
-    { key:'Completed Revenue',           label:'Completed Rev',cls:'num money', fmt:r=>fmt$(r['Completed Revenue']) },
-    { key:'Revenue per Paid Hour',       label:'Rev/Paid Hr',  cls:'num money', fmt:r=>fmt$(r['Revenue per Paid Hour']) },
-    { key:'Converted Job Average',       label:'Conv Job Avg', cls:'num money', fmt:r=>cleanNum(r['Converted Job Average'])>0?fmt$(r['Converted Job Average']):'—' },
-    { key:'Opportunity Conversion Rate', label:'Opp Conv %',   special:'opp_conv' },
-    { key:'Leads Set',                   label:'Leads',        cls:'num col-dim' },
-    { key:'Converted Jobs',              label:'Conv Jobs',    cls:'num col-dim' },
-  ]},
-  conversion: { cols: [
-    { key:'Name',                             label:'Technician',     special:'tech' },
-    { key:'Opportunity',                      label:'Opps',           cls:'num col-dim' },
-    { key:'Converted Jobs',                   label:'Conv Jobs',      cls:'num col-dim' },
-    { key:'Opportunity Conversion Rate',      label:'Opp Conv %',     special:'opp_conv' },
-    { key:'Replacement Lead Conversion Rate', label:'Repl Lead Conv', special:'repl_conv' },
-    { key:'Leads Set',                        label:'Leads Set',      cls:'num col-dim' },
-    { key:'Converted Job Average',            label:'Conv Job Avg',   cls:'num money', fmt:r=>cleanNum(r['Converted Job Average'])>0?fmt$(r['Converted Job Average']):'—' },
-    { key:'Completed Revenue',                label:'Rev',            cls:'num money', fmt:r=>fmt$(r['Completed Revenue']) },
-  ]},
-  quality: { cols: [
-    { key:'Name',                              label:'Technician',   special:'tech' },
-    { key:'Total Paid Time',                   label:'Paid Hrs',     cls:'num col-dim' },
-    { key:'Tech Recall %',                    label:'Recall %',     special:'recall' },
-    { key:'Recalls Caused',                   label:'Recalls',      cls:'num', fmt:r=>{ const v=cleanNum(r['Recalls Caused']); return `<span class="${v>0?'col-bad':'col-good'}">${v}</span>`; }, html:true },
-    { key:'Warranty Jobs',                    label:'Warranty',     cls:'num', fmt:r=>{ const v=cleanNum(r['Warranty Jobs']); return `<span class="${v>0?'col-warn':''}">${v}</span>`; }, html:true },
-    { key:'First Call Arrival Time',          label:'1st Call',     cls:'num col-dim' },
-    { key:'First Call Arrival Time Variance', label:'Arrival Var',  special:'arrival' },
-    { key:'Customer Satisfaction',            label:'Cust Sat',     cls:'num col-dim', fmt:r=>{ const v=cleanNum(r['Customer Satisfaction']); return v>0?v.toFixed(2):'—'; } },
+    { key:'Name',                  label:'Technician',    special:'tech' },
+    { key:'Opportunity',           label:'Opportunities', cls:'num col-dim' },
+    { key:'Completed Revenue',     label:'Completed Rev', cls:'num money', fmt:r=>fmt$(r['Completed Revenue']) },
+    { key:'Revenue per Paid Hour', label:'Rev / Paid Hr', cls:'num money', fmt:r=>fmt$(r['Revenue per Paid Hour']) },
   ]},
 };
 
