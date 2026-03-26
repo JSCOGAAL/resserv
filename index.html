@@ -313,13 +313,16 @@ function isTotals(row) {
 }
 
 async function getCSV(url) {
-  // Try direct fetch first, fall back to CORS proxy
+  // Try direct fetch first with a 8-second timeout
   try {
-    const r = await fetch(url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const r = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     if (r.ok) { const t = await r.text(); if (!t.trim().startsWith('<')) return t; }
   } catch(e) {}
-  // CORS proxy fallback
-  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  // Fast CORS proxy fallback
+  const proxy = 'https://corsproxy.io/?' + encodeURIComponent(url);
   const r2 = await fetch(proxy);
   return r2.text();
 }
