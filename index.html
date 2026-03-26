@@ -509,7 +509,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 setInterval(async()=>{ try{ const{raw1,raw2,raw3}=await fetchAll(); render(raw1,raw2,raw3); }catch(e){console.warn('Refresh failed',e);} },REFRESH_MS);
 
 (async()=>{
-  try{ const{raw1,raw2}=await fetchAll(); render(raw1,raw2); }
+  try{ const{raw1,raw2,raw3}=await fetchAll(); render(raw1,raw2,raw3); }
   catch(e){ console.error('INIT_ERR',e); render(getSampleTechs(),getSampleUnits(),[]); }
   finally{ document.getElementById('loading').classList.add('hidden'); document.getElementById('app').classList.add('visible'); }
 })();
