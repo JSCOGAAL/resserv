@@ -312,16 +312,22 @@ function isTotals(row) {
   return /^\d+$/.test(n) || n === '';
 }
 
-async function fetchAll() {
-  const [r1, r2] = await Promise.all([
-    fetch(URL1).then(r=>r.text()),
-    fetch(URL2).then(r=>r.text()),
-  ]);
-  let raw3 = [];
+async function getCSV(url) {
+  // Try direct fetch first, fall back to CORS proxy
   try {
-    const r3 = await fetch(URL3).then(r=>r.text());
-    raw3 = parseLeads(r3);
-  } catch(e) { console.warn('URL3 failed:', e); }
+    const r = await fetch(url);
+    if (r.ok) { const t = await r.text(); if (!t.trim().startsWith('<')) return t; }
+  } catch(e) {}
+  // CORS proxy fallback
+  const proxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  const r2 = await fetch(proxy);
+  return r2.text();
+}
+
+async function fetchAll() {
+  const [r1, r2] = await Promise.all([getCSV(URL1), getCSV(URL2)]);
+  let raw3 = [];
+  try { raw3 = parseLeads(await getCSV(URL3)); } catch(e) { console.warn('leads failed:', e); }
   return { raw1: parseCSV(r1).filter(r=>!isTotals(r)), raw2: parseCSV(r2).filter(r=>!isTotals(r)), raw3 };
 }
 
