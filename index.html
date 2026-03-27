@@ -270,7 +270,7 @@ footer{display:flex;align-items:center;justify-content:space-between;padding:cla
   <footer>
     <span class="footer-txt"><span class="live-dot"></span>Live Data &middot; Auto-refreshes every hour</span>
     <span class="footer-txt" id="last-updated">Last updated: &mdash;</span>
-    <span class="footer-txt">Jackson Services &copy; 2026</span>
+    <span class="footer-txt">Jackson Services &copy; 2025</span>
   </footer>
 </div>
 
@@ -465,7 +465,8 @@ function renderSidebar() {
   document.getElementById('leads-chart').innerHTML=byLeads.length ? byLeads.map(l=>{
     const pct=(l.sales/maxSales)*100;
     const label='$'+(l.sales>=1000?(l.sales/1000).toFixed(1)+'K':Math.round(l.sales));
-    return `<div class="bc-row"><div class="bc-name">${l.name.split(' ')[0]}</div><div class="bc-track"><div class="bc-fill" style="width:${pct}%">${label}</div></div></div>`;
+    const parts=l.name.trim().split(' '); const dn=parts[0]+(parts.length>1?' '+parts[parts.length-1][0]+'.':'');
+    return `<div class="bc-row"><div class="bc-name">${dn}</div><div class="bc-track"><div class="bc-fill" style="width:${pct}%">${label}</div></div></div>`;
   }).join('') : '<div style="color:var(--dim);font-size:clamp(8px,.9vw,11px);padding:8px">No lead data</div>';
 }
 
